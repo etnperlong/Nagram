@@ -118,13 +118,13 @@ object NaConfig {
         addConfig(
             "TextUndoRedo",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val noiseSuppressAndVoiceEnhance =
         addConfig(
             "NoiseSuppressAndVoiceEnhance",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val showNoQuoteForward =
         addConfig(
@@ -409,7 +409,7 @@ object NaConfig {
         addConfig(
             "DoNotShareMyPhoneNumber",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val defaultDeleteMenu =
         addConfig(
@@ -650,7 +650,7 @@ object NaConfig {
         addConfig(
             "ShowHiddenFeature",
             ConfigItem.configTypeBool,
-            false
+            true
         )
     val searchHashtagDefaultPageChannel =
         addConfig(
