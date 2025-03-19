@@ -2,7 +2,7 @@ name: Release Build
 on:
   push:
     branches:
-      - main
+      - my
     paths-ignore:
       - '**.md'
       - '.github/**'
@@ -26,6 +26,7 @@ jobs:
   ffmpeg:
     name: Native Build (FFmpeg)
     runs-on: ubuntu-latest
+    needs: check
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -50,7 +51,7 @@ jobs:
         with:
           python-version: '3.12'
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: steps.cache.outputs.cache-hit != 'true'
         with:
           java-version: '17'
@@ -61,7 +62,7 @@ jobs:
       - name: Install NDK
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "y" | sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
           echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
       - name: Native Build
@@ -74,6 +75,7 @@ jobs:
   boringssl:
     name: Native Build (BoringSSL)
     runs-on: ubuntu-latest
+    needs: check
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -89,7 +91,7 @@ jobs:
             TMessagesProj/jni/boringssl/build
           key: ${{ hashFiles('boringssl_status') }}
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: steps.cache.outputs.cache-hit != 'true'
         with:
           java-version: '17'
@@ -100,9 +102,9 @@ jobs:
       - name: Install NDK
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "y" | sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
-          echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
       - name: Native Build
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -157,7 +159,7 @@ jobs:
             TMessagesProj/jni/boringssl/build
           key: ${{ hashFiles('boringssl_status') }}
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: steps.cache.outputs.cache-hit != 'true'
         with:
           java-version: '17'
@@ -168,9 +170,9 @@ jobs:
       - name: Install NDK
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "y" | sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
-          echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
       - name: Fix BoringSSL
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
@@ -187,20 +189,20 @@ jobs:
     needs: check
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Fetch Status
         run: |
           sed -i 's/\/\///g' settings.gradle
           git submodule status v2ray > v2ray_status
       - name: V2ray Cache
         id: cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             TMessagesProj/libs/libv2ray.aar
           key: ${{ hashFiles('bin/libs/v2ray/*', 'v2ray_status') }}
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: steps.cache.outputs.cache-hit != 'true'
         with:
           java-version: '17'
@@ -211,14 +213,22 @@ jobs:
       - name: Install NDK
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "y" | sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
-          echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
       - name: Install Golang
-        uses: actions/setup-go@v4
+        uses: actions/setup-go@v5
         if: steps.cache.outputs.cache-hit != 'true'
         with:
-          go-version: 1.16
+          go-version: 1.24
+      - name: Install Gomobile
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+            go install golang.org/x/mobile/cmd/gomobile@latest
+            go install golang.org/x/mobile/cmd/gobind@latest
+        env:
+            GOPROXY: https://proxy.golang.org,direct
+            GO111MODULE: "on"
       - name: Native Build
         if: steps.cache.outputs.cache-hit != 'true'
         run: ./run libs v2ray
@@ -228,20 +238,20 @@ jobs:
     needs: check
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Fetch Status
         run: |
           sed -i 's/\/\///g' settings.gradle
           git submodule status ss-rust/src/main/rust/shadowsocks-rust > shadowsocks_status
       - name: Shadowsocks Cache
         id: cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             TMessagesProj/libs/ss-rust-release.aar
           key: ${{ hashFiles('shadowsocks_status') }}
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: steps.cache.outputs.cache-hit != 'true'
         with:
           java-version: '17'
@@ -252,9 +262,9 @@ jobs:
       - name: Install NDK
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "y" | sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.2.12479018" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
-          echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/27.2.12479018" >> local.properties
       - name: Install Rust
         if: steps.cache.outputs.cache-hit != 'true'
         run: ./run init action shadowsocks
@@ -267,20 +277,20 @@ jobs:
     needs: check
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Fetch Status
         run: |
           sed -i 's/\/\///g' settings.gradle
           git submodule status 'ssr-libev/*' > shadowsocksr_status
       - name: ShadowsocksR Cache
         id: cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             TMessagesProj/libs/ssr-libev-release.aar
           key: ${{ hashFiles('shadowsocksr_status') }}
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         if: steps.cache.outputs.cache-hit != 'true'
         with:
           java-version: '17'
@@ -291,9 +301,9 @@ jobs:
       - name: Install NDK
         if: steps.cache.outputs.cache-hit != 'true'
         run: |
-          echo "y" | sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
-          echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
       - name: Native Build
         if: steps.cache.outputs.cache-hit != 'true'
         run: ./run libs ssr
@@ -314,7 +324,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       - name: Set up JDK 17
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -322,9 +332,9 @@ jobs:
         uses: android-actions/setup-android@v3
       - name: Install NDK
         run: |
-          echo "y" | sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
           echo "sdk.dir=${ANDROID_HOME}" > local.properties
-          echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
       - name: Fetch Status
         run: |
           sed -i 's/\/\///g' settings.gradle
@@ -346,23 +356,27 @@ jobs:
             TMessagesProj/src/main/libs
           key: ${{ hashFiles('TMessagesProj/jni/**', 'ffmpeg_status', 'boringssl_status') }}-arm64-v8a
       - name: V2ray Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             TMessagesProj/libs/libv2ray.aar
           key: ${{ hashFiles('bin/libs/v2ray/*', 'v2ray_status') }}
       - name: Shadowsocks Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             TMessagesProj/libs/ss-rust-release.aar
           key: ${{ hashFiles('shadowsocks_status') }}
       - name: ShadowsocksR Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: |
             TMessagesProj/libs/ssr-libev-release.aar
           key: ${{ hashFiles('shadowsocksr_status') }}
+      - name: Configure Google Service (FCM)
+        env:
+          GOOGLE_SERVICES_JSON: ${{ secrets.GOOGLE_SERVICES_JSON }}
+        run: echo $GOOGLE_SERVICES_JSON | base64 -di > TMessagesProj/google-services.json
       - name: Configure Gradle
         run: |
           sed -i -e "s/16384/6144/g" gradle.properties
@@ -399,7 +413,7 @@ jobs:
         with:
           path: artifacts
       - name: Download Telegram Bot API Binary
-        uses: actions/download-artifact@master
+        uses: actions/download-artifact@v4
         with:
           name: telegram-bot-api-binary
           path: .
@@ -434,11 +448,17 @@ jobs:
           tb = telebot.TeleBot('''${{ secrets.HELPER_BOT_TOKEN }}''')
           file_paths = ("""${mini64}""", """${mini32}""", """${full64}""", """${full32}""")
           print(file_paths)
-          list_captions = ("", "", "", """[${{ github.event.head_commit.message }}](${{ github.event.head_commit.url }})""")
-          for file, caption, message_id in zip(file_paths, list_captions, range(35, 39)):
+          list_captions = ("", "", "", """Release version, [${{ github.event.head_commit.message }}](${{ github.event.head_commit.url }})""")
+          for file, caption, message_id in zip(file_paths, list_captions, range(46, 50)):
             media = telebot.types.InputMediaDocument(open(file, "rb"), caption=caption, parse_mode='Markdown')
-            tb.edit_message_media(chat_id=-1001825572660, media=media, message_id=message_id)
-          tb.copy_messages(chat_id='''${{ secrets.HELPER_BOT_TARGET }}''', message_ids=list(range(35, 39)), from_chat_id=-1001825572660)
+            for _ in range(3):
+              try:
+                tb.edit_message_media(chat_id='''${{ secrets.METADATA_CHANNEL_ID }}''', media=media, message_id=message_id)
+              except Exception as e:
+                print(e)
+              else:
+                break
+          tb.copy_messages(chat_id='''${{ secrets.HELPER_BOT_TARGET }}''', message_ids=list(range(46, 50)), from_chat_id='''${{ secrets.METADATA_CHANNEL_ID }}''')
           EOL
 
           python Send_to_Telegram.py
@@ -449,14 +469,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
       - name: Clone Telegram Bot API
         run: |
           git clone --recursive https://github.com/tdlib/telegram-bot-api.git
           git status telegram-bot-api >> telegram-bot-api-status
       - name: Cache Bot API Binary
         id: cache-bot-api
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: telegram-bot-api-binary
           key: CI-telegram-bot-api-${{ hashFiles('telegram-bot-api-status') }}
@@ -475,7 +495,7 @@ jobs:
           ls -l telegram-bot-api/bin/telegram-bot-api*
           cp telegram-bot-api/bin/telegram-bot-api telegram-bot-api-binary
       - name: Upload Binary
-        uses: actions/upload-artifact@master
+        uses: actions/upload-artifact@v4
         with:
           name: telegram-bot-api-binary
           path: telegram-bot-api-binary
