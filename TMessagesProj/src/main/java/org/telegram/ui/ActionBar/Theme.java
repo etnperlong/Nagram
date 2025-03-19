@@ -4598,7 +4598,7 @@ public class Theme {
         themeInfo.previewOutColor = 0xffd0e6ff;
         themeInfo.firstAccentIsDefault = true;
         themeInfo.currentAccentId = DEFALT_THEME_ACCENT_ID;
-        themeInfo.sortIndex = 1;
+        themeInfo.sortIndex = 3;
         themeInfo.setAccentColorOptions(
                 new int[]    { 0xFF5890C5,                     0xFF239853,                    0xFFCE5E82,                    0xFF7F63C3,                    0xFF2491AD,                    0xFF299C2F,                    0xFF8854B4,                    0xFF328ACF,                    0xFF43ACC7,                    0xFF52AC44,                    0xFFCD5F93,                    0xFFD28036,                    0xFF8366CC,                    0xFFCE4E57,                    0xFFD3AE40,                    0xFF7B88AB },
                 new int[]    { 0xFFB8E18D,                     0xFFFAFBCC,                    0xFFFFF9DC,                    0xFFC14F6E,                    0xFFD1BD1B,                    0xFFFFFAC9,                    0xFFFCF6D8,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000 },
@@ -4627,12 +4627,32 @@ public class Theme {
         themesDict.put("NekoX", themeInfo);
 
         themeInfo = new ThemeInfo();
+        themeInfo.name = "小而美 8.0";
+        themeInfo.assetName = "welike_8.0.attheme";
+        themeInfo.previewBackgroundColor = -1184275;
+        themeInfo.previewInColor = Color.parseColor("#FFFFFFFF");
+        themeInfo.previewOutColor = Color.parseColor("#07C160");
+        themeInfo.sortIndex = 1;
+        themes.add(themeInfo);
+        themesDict.put("WeLike", themeInfo);
+
+        themeInfo = new ThemeInfo();
+        themeInfo.name = "小而美 8.0 (暗色)";
+        themeInfo.assetName = "welike_8.0_dark.attheme";
+        themeInfo.previewBackgroundColor = -14671840;
+        themeInfo.previewInColor = Color.parseColor("#363636FF");
+        themeInfo.previewOutColor = Color.parseColor("#07C160");
+        themeInfo.sortIndex = 2;
+        themes.add(themeInfo);
+        themesDict.put("WeLike Dark", themeInfo);
+
+        themeInfo = new ThemeInfo();
         themeInfo.name = "Dark Blue";
         themeInfo.assetName = "darkblue.attheme";
         themeInfo.previewBackgroundColor = 0xff5f6e82;
         themeInfo.previewInColor = 0xff76869c;
         themeInfo.previewOutColor = 0xff82a8e3;
-        themeInfo.sortIndex = 3;
+        themeInfo.sortIndex = 5;
         themeInfo.setAccentColorOptions(
                 new int[]    {                    0xFF927BD4,                    0xFF698AFB,                    0xFF23A7F0,                    0xFF7B71D1,                    0xFF69B955,                    0xFF2990EA,                    0xFF7082E9,                    0xFF66BAED,                    0xff3685fa,                    0xff46c8ed,                    0xff64AC5F,                    0xffeb7cb1,                    0xffee902a,                    0xffa281f0,                    0xffd34324,                    0xffeebd34,                    0xff7f8fab,                    0xff3581e3 },
                 new int[]    {                    0xFF9D5C99,                    0xFF635545,                    0xFF31818B,                    0xFFAD6426,                    0xFF4A7034,                    0xFF335D82,                    0xFF36576F,                    0xFF597563,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000 },
@@ -4656,7 +4676,7 @@ public class Theme {
         themeInfo.previewBackgroundColor = 0xffe1e9f0;
         themeInfo.previewInColor = 0xffffffff;
         themeInfo.previewOutColor = 0xff6ca1eb;
-        themeInfo.sortIndex = 5;
+        themeInfo.sortIndex = 7;
         themeInfo.setAccentColorOptions(
                 new int[]    {                    0xFF40B1E2,                    0xFF41B05D,                    0xFFCE8C20,                    0xFF57A3EB,                    0xFFDE8534,                    0xFFCC6189,                    0xFF3490EB,                    0xFF43ACC7,                    0xFF52AC44,                    0xFFCD5F93,                    0xFFD28036,                    0xFF8366CC,                    0xFFCE4E57,                    0xFFD3AE40,                    0xFF7B88AB },
                 new int[]    {                    0xFF319FCA,                    0xFF28A359,                    0xFF8C5A3F,                    0xFF3085D3,                    0xFFC95870,                    0xFF7871CD,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000 },
@@ -4680,7 +4700,7 @@ public class Theme {
         themeInfo.previewBackgroundColor = 0xffffffff;
         themeInfo.previewInColor = 0xffebeef4;
         themeInfo.previewOutColor = 0xff7cb2fe;
-        themeInfo.sortIndex = 2;
+        themeInfo.sortIndex = 4;
         themeInfo.setAccentColorOptions(
                 new int[]    { 0xFF56A2C9, 0xFFCC6E83, 0xFFD08E47, 0xFFCC6462, 0xFF867CD2, 0xFF4C91DF, 0xFF57B4D9, 0xFF54B169, 0xFFD9BF3F, 0xFFCC6462, 0xFFCC6E83, 0xFF9B7BD2, 0xFFD79144, 0xFF7B88AB },
                 new int[]    { 0xFF6580DC, 0xFF6C6DD2, 0xFFCB5481, 0xFFC34A4A, 0xFF5C8EDF, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
@@ -4704,7 +4724,7 @@ public class Theme {
         themeInfo.previewBackgroundColor = 0xff535659;
         themeInfo.previewInColor = 0xff747A84;
         themeInfo.previewOutColor = 0xff75A2E6;
-        themeInfo.sortIndex = 4;
+        themeInfo.sortIndex = 6;
         themeInfo.setAccentColorOptions(
                 new int[]    {                    0xFF6ABE3F,                    0xFF8D78E3,                    0xFFDE5E7E,                    0xFF5977E8,                    0xFFDBC11A,                    0xff3e88f7,                    0xff4ab5d3,                    0xff4ab841,                    0xffd95576,                    0xffe27d2b,                    0xff936cda,                    0xffd04336,                    0xffe8ae1c,                    0xff7988a3 },
                 new int[]    {                    0xFF8A5294,                    0xFFB46C1B,                    0xFFAF4F6F,                    0xFF266E8D,                    0xFF744EB7,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000 },
@@ -4728,7 +4748,7 @@ public class Theme {
         themeInfo.previewBackgroundColor = 0xff000000;
         themeInfo.previewInColor = 0xff000000;
         themeInfo.previewOutColor = 0xff75A2E6;
-        themeInfo.sortIndex = 5;
+        themeInfo.sortIndex = 7;
         themeInfo.setAccentColorOptions(
                 new int[]    {                    0xFF6ABE3F,                    0xFF8D78E3,                    0xFFDE5E7E,                    0xFF5977E8,                    0xFFDBC11A,                    0xff3e88f7,                    0xff4ab5d3,                    0xff4ab841,                    0xffd95576,                    0xffe27d2b,                    0xff936cda,                    0xffd04336,                    0xffe8ae1c,                    0xff7988a3 },
                 new int[]    {                    0xFF8A5294,                    0xFFB46C1B,                    0xFFAF4F6F,                    0xFF266E8D,                    0xFF744EB7,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000,                    0x00000000 },
@@ -4752,7 +4772,7 @@ public class Theme {
             themeInfo.previewBackgroundColor = MonetHelper.getColor("n1_50");
             themeInfo.previewInColor = MonetHelper.getColor("a2_50");
             themeInfo.previewOutColor = MonetHelper.getColor("a1_600");
-            themeInfo.sortIndex = 6;
+            themeInfo.sortIndex = 8;
             themes.add(themeInfo);
             themesDict.put("Monet Light", themeInfo);
 
@@ -4762,7 +4782,7 @@ public class Theme {
             themeInfo.previewBackgroundColor = MonetHelper.getColor("n1_900");
             themeInfo.previewInColor = MonetHelper.getColor("n2_800");
             themeInfo.previewOutColor = MonetHelper.getColor("a1_100");
-            themeInfo.sortIndex = 7;
+            themeInfo.sortIndex = 9;
             themes.add(themeInfo);
             themesDict.put("Monet Dark", themeInfo);
 
@@ -4772,7 +4792,7 @@ public class Theme {
             themeInfo.previewBackgroundColor = MonetHelper.getColor("n1_1000");
             themeInfo.previewInColor = MonetHelper.getColor("n2_800");
             themeInfo.previewOutColor = MonetHelper.getColor("a1_100");
-            themeInfo.sortIndex = 8;
+            themeInfo.sortIndex = 10;
             themes.add(themeInfo);
             themesDict.put("Monet AMOLED", themeInfo);
         }
