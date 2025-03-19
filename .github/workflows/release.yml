@@ -1,12 +1,5 @@
 name: Release Build
 on:
-  push:
-    branches:
-      - my
-    paths-ignore:
-      - '**.md'
-      - '.github/**'
-      - '!.github/workflows/release.yml'
   workflow_dispatch:
     inputs:
       upload:
@@ -426,6 +419,7 @@ jobs:
           pip install telebot
       - name: Send to Telegram
         run: |
+          # 启动本地 Telegram Bot API 服务器
           chmod +x telegram-bot-api-binary
           function start() {
             ./telegram-bot-api-binary --api-id=11535358 --api-hash=33d372962fadb01df47e6ceed4e33cd6 --local 2>&1 > /dev/null &
@@ -434,21 +428,59 @@ jobs:
           curl http://127.0.0.1:8081/ || start
           curl http://127.0.0.1:8081/ || start
           curl http://127.0.0.1:8081/ || start
-          # send release via telegram bot api
+          
+          # 查找 APK 文件
           export mini64=$(find artifacts -name "*mini-arm64-v8a.apk")
           export mini32=$(find artifacts -name "*mini-armeabi-v7a.apk")
           export full64=$(find artifacts -name "*full-arm64-v8a.apk")
           export full32=$(find artifacts -name "*full-armeabi-v7a.apk")
-
+          
+          # 获取版本信息
+          APP_VERSION_NAME=$(grep "APP_VERSION_NAME" gradle.properties | cut -d '=' -f2 | tr -d ' ')
+          APP_VERSION_CODE=$(grep "APP_VERSION_CODE" gradle.properties | cut -d '=' -f2 | tr -d ' ')
+          COMMIT_ID=$(echo "${{ github.event.head_commit.id }}" | cut -c1-7)
+          COMMIT_URL="${{ github.event.head_commit.url }}"
+          COMMIT_MESSAGE="${{ github.event.head_commit.message }}"
+          
+          # 创建并执行Python脚本
           touch ./Send_to_Telegram.py
           sudo cat >./Send_to_Telegram.py <<EOL
           import telebot
           from telebot import apihelper
+
+          # 配置本地Bot API
           apihelper.API_URL = "http://localhost:8081/bot{0}/{1}"
           tb = telebot.TeleBot('''${{ secrets.HELPER_BOT_TOKEN }}''')
+
+          # APK文件路径
           file_paths = ("""${mini64}""", """${mini32}""", """${full64}""", """${full32}""")
           print(file_paths)
-          list_captions = ("", "", "", """Release version, [${{ github.event.head_commit.message }}](${{ github.event.head_commit.url }})""")
+
+          # 版本信息
+          app_version_name = """${APP_VERSION_NAME}"""
+          app_version_code = """${APP_VERSION_CODE}"""
+          commit_id = """${COMMIT_ID}"""
+          commit_url = """${COMMIT_URL}"""
+          commit_message = """${COMMIT_MESSAGE}"""
+
+          # 构建消息正文
+          caption_template = """**Nagram Fork 新版本发布** - {app_version_name}({app_version_code})
+          Last Commit ([{commit_id}]({commit_url})):
+          > {commit_message}"""
+
+          list_captions = (
+              "", 
+              "", 
+              "", 
+              caption_template.format(
+                  app_version_name=app_version_name,
+                  app_version_code=app_version_code,
+                  commit_id=commit_id,
+                  commit_url=commit_url,
+                  commit_message=commit_message.replace("\\n", "\\n> ")
+              )
+          )
+
           for file, caption, message_id in zip(file_paths, list_captions, range(46, 50)):
             media = telebot.types.InputMediaDocument(open(file, "rb"), caption=caption, parse_mode='Markdown')
             for _ in range(3):
@@ -458,7 +490,7 @@ jobs:
                 print(e)
               else:
                 break
-          tb.copy_messages(chat_id='''${{ secrets.HELPER_BOT_TARGET }}''', message_ids=list(range(46, 50)), from_chat_id='''${{ secrets.METADATA_CHANNEL_ID }}''')
+          tb.copy_messages(chat_id='''${{ secrets.RELEASE_CHANNEL_ID }}''', message_ids=list(range(46, 50)), from_chat_id='''${{ secrets.METADATA_CHANNEL_ID }}''')
           EOL
 
           python Send_to_Telegram.py
