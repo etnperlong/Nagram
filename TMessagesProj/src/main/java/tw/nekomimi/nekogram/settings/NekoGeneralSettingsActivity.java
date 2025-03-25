@@ -59,6 +59,7 @@ import org.telegram.ui.Components.LayoutHelper;
 import org.telegram.ui.Components.RecyclerListView;
 import org.telegram.ui.Components.SeekBarView;
 import org.telegram.ui.Components.UndoView;
+import org.unifiedpush.android.connector.UnifiedPush;
 
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -126,7 +127,7 @@ public class NekoGeneralSettingsActivity extends BaseNekoXSettingsActivity {
     private final AbstractConfigCell useIPv6Row = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.useIPv6));
     private final AbstractConfigCell useProxyItemRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.useProxyItem));
     private final AbstractConfigCell hideProxyByDefaultRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.hideProxyByDefault));
-//    private final AbstractConfigCell autoUpdateSubInfoRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.autoUpdateSubInfo));
+    private final AbstractConfigCell autoUpdateSubInfoRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.autoUpdateSubInfo));
     private final AbstractConfigCell useSystemDNSRow = cellGroup.appendCell(new ConfigCellTextCheck(NekoConfig.useSystemDNS));
     private final AbstractConfigCell disableProxyWhenVpnEnabledRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getDisableProxyWhenVpnEnabled()));
     private final AbstractConfigCell customDoHRow = cellGroup.appendCell(new ConfigCellTextInput(null, NekoConfig.customDoH, "https://1.0.0.1/dns-query", null));
@@ -262,6 +263,8 @@ private final AbstractConfigCell defaultHlsVideoQualityRow = cellGroup.appendCel
             LocaleController.getString(R.string.PushServiceTypeMicroG),
     }, null));
     private final AbstractConfigCell pushServiceTypeInAppDialogRow = cellGroup.appendCell(new ConfigCellTextCheck(NaConfig.INSTANCE.getPushServiceTypeInAppDialog()));
+
+    private final AbstractConfigCell pushServiceTypeUnifiedDistributorRow = cellGroup.appendCell(new ConfigCellCustom("UnifiedPushDistributor", CellGroup.ITEM_TYPE_TEXT_SETTINGS_CELL, NaConfig.INSTANCE.getPushServiceType().Int() == 2));
     private final AbstractConfigCell pushServiceTypeUnifiedGatewayRow = cellGroup.appendCell(new ConfigCellTextInput(null, NaConfig.INSTANCE.getPushServiceTypeUnifiedGateway(), null, null, (input) -> input.isEmpty() ? (String) NaConfig.INSTANCE.getPushServiceTypeUnifiedGateway().defaultValue : input));
     private final AbstractConfigCell divider8 = cellGroup.appendCell(new ConfigCellDivider());
 
@@ -413,6 +416,21 @@ private final AbstractConfigCell defaultHlsVideoQualityRow = cellGroup.appendCel
                     });
                 } else if (position == cellGroup.rows.indexOf(nameOrderRow)) {
                     LocaleController.getInstance().recreateFormatters();
+                } else if (position == cellGroup.rows.indexOf(pushServiceTypeUnifiedDistributorRow)) {
+                    PopupBuilder builder = new PopupBuilder(view);
+                    List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext, new ArrayList<>());
+                    builder.setItems(distributors, (__, c) -> {
+                        UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, c.toString());
+                        UnifiedPush.registerApp(
+                                ApplicationLoader.applicationContext,
+                                "default",
+                                new ArrayList<>(),
+                                "Telegram Simple Push"
+                        );
+                        listAdapter.notifyItemChanged(position);
+                        return Unit.INSTANCE;
+                    });
+                    builder.show();
                 }
             }
         });
