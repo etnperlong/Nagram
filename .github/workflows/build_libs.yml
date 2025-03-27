@@ -1,0 +1,388 @@
+name: Build Native Libs
+
+on:
+  workflow_dispatch:
+    inputs:
+      recompile:
+        description: 'Re-compile'
+        type: choice
+        options:
+          - 'No'
+          - 'Yes'
+        default: 'No'
+        required: true
+
+jobs:
+  check:
+    name: Check Access
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Check access"
+        uses: "lannonbr/repo-permission-check-action@2.0.0"
+        with:
+          permission: "write"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  ffmpeg:
+    name: Native Build (FFmpeg)
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch Status
+        run: |
+          sed -i 's/\/\///g' settings.gradle
+          git submodule status TMessagesProj/jni/ffmpeg > ffmpeg_status
+          git submodule status TMessagesProj/jni/libvpx > libvpx_status
+          git submodule status TMessagesProj/jni/dav1d > libdav1d_status
+      - name: FFmpeg Cache
+        id: cache
+        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            TMessagesProj/jni/ffmpeg/build
+            TMessagesProj/jni/libvpx/build
+            TMessagesProj/jni/dav1d/build
+          key: ${{ hashFiles('ffmpeg_status', 'libvpx_status', 'libdav1d_status', 'TMessagesProj/jni/*ffmpeg*.sh', 'TMessagesProj/jni/*libvpx*.sh', 'TMessagesProj/jni/*dav1d*.sh', 'TMessagesProj/jni/patches/ffmpeg/*') }}
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          python-version: '3.12'
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Android SDK Tools
+        uses: android-actions/setup-android@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install NDK
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+      - name: Native Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          ./run init action ffmpeg
+          ./run init libs libvpx
+          ./run init libs dav1d
+          ./run init libs ffmpeg
+      - name: Upload FFmpeg build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ffmpeg-libs
+          path: |
+            TMessagesProj/jni/ffmpeg/build
+            TMessagesProj/jni/libvpx/build
+            TMessagesProj/jni/dav1d/build
+          compression-level: 9
+  boringssl:
+    name: Native Build (BoringSSL)
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch Status
+        run: |
+          sed -i 's/\/\///g' settings.gradle
+          git submodule status TMessagesProj/jni/boringssl > boringssl_status
+      - name: BoringSSL Cache
+        id: cache
+        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            TMessagesProj/jni/boringssl/build
+          key: ${{ hashFiles('boringssl_status') }}
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Android SDK Tools
+        uses: android-actions/setup-android@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install NDK
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+      - name: Native Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          ./run init action boringssl
+          ./run init libs boringssl
+      - name: Upload BoringSSL build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: boringssl-libs
+          path: |
+            TMessagesProj/jni/boringssl/build
+          compression-level: 9
+  native:
+    name: Native Build (Telegram)
+    runs-on: ubuntu-latest
+    needs:
+      - ffmpeg
+      - boringssl
+    strategy:
+      matrix:
+        flavor:
+          - armeabi-v7a
+          - arm64-v8a
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch Status
+        run: |
+          sed -i 's/\/\///g' settings.gradle
+          git submodule status TMessagesProj/jni/ffmpeg > ffmpeg_status
+          git submodule status TMessagesProj/jni/libvpx > libvpx_status
+          git submodule status TMessagesProj/jni/dav1d > libdav1d_status
+          git submodule status TMessagesProj/jni/boringssl > boringssl_status
+      - name: Native Cache
+        id: cache
+        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            TMessagesProj/src/main/libs
+          key: ${{ hashFiles('TMessagesProj/jni/**', 'ffmpeg_status', 'boringssl_status') }}-${{ matrix.flavor }}
+      - name: Checkout Library
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          git submodule update --init 'TMessagesProj/jni/*'
+      - name: Download FFmpeg Artifacts
+        uses: actions/download-artifact@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          name: ffmpeg-libs
+          path: TMessagesProj/jni
+      - name: Download BoringSSL Artifacts
+        uses: actions/download-artifact@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          name: boringssl-libs
+          path: TMessagesProj/jni
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Android SDK Tools
+        uses: android-actions/setup-android@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install NDK
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+      - name: Fix BoringSSL
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          cd TMessagesProj/jni
+          ./patch_boringssl.sh
+      - name: Native Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          export NATIVE_TARGET="${{ matrix.flavor }}"
+          ./run libs native
+      - name: Upload Native build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-libs-${{ matrix.flavor }}
+          path: |
+            TMessagesProj/src/main/libs/${{ matrix.flavor }}
+          compression-level: 9
+  v2ray:
+    name: Native Build (V2ray)
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch Status
+        run: |
+          sed -i 's/\/\///g' settings.gradle
+          git submodule status v2ray > v2ray_status
+      - name: V2ray Cache
+        id: cache
+        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            TMessagesProj/libs/libv2ray.aar
+          key: ${{ hashFiles('bin/libs/v2ray/*', 'v2ray_status') }}
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Android SDK Tools
+        uses: android-actions/setup-android@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install NDK
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+      - name: Install Golang
+        uses: actions/setup-go@v5
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          go-version: 1.24
+      - name: Install Gomobile
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+            go install golang.org/x/mobile/cmd/gomobile@latest
+            go install golang.org/x/mobile/cmd/gobind@latest
+        env:
+            GOPROXY: https://proxy.golang.org,direct
+            GO111MODULE: "on"
+      - name: Native Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: ./run libs v2ray
+      - name: Upload V2ray build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2ray-libs
+          path: |
+            TMessagesProj/libs/libv2ray.aar
+          compression-level: 9
+  shadowsocks:
+    name: Native Build (Shadowsocks)
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch Status
+        run: |
+          sed -i 's/\/\///g' settings.gradle
+          git submodule status ss-rust/src/main/rust/shadowsocks-rust > shadowsocks_status
+      - name: Shadowsocks Cache
+        id: cache
+        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            TMessagesProj/libs/ss-rust-release.aar
+          key: ${{ hashFiles('shadowsocks_status') }}
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Android SDK Tools
+        uses: android-actions/setup-android@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install NDK
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;27.2.12479018" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/27.2.12479018" >> local.properties
+      - name: Install Rust
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: ./run init action shadowsocks
+      - name: Native Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: ./run libs shadowsocks
+      - name: Upload Shadowsocks build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadowsocks-libs
+          path: |
+            TMessagesProj/libs/ss-rust-release.aar
+          compression-level: 9
+  shadowsocksr:
+    name: Native Build (ShadowsocksR)
+    runs-on: ubuntu-latest
+    needs: check
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Fetch Status
+        run: |
+          sed -i 's/\/\///g' settings.gradle
+          git submodule status 'ssr-libev/*' > shadowsocksr_status
+      - name: ShadowsocksR Cache
+        id: cache
+        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        uses: actions/cache@v4
+        with:
+          path: |
+            TMessagesProj/libs/ssr-libev-release.aar
+          key: ${{ hashFiles('shadowsocksr_status') }}
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        if: steps.cache.outputs.cache-hit != 'true'
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+      - name: Setup Android SDK Tools
+        uses: android-actions/setup-android@v3
+        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Install NDK
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          echo "y" | sudo ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager --install "ndk;21.4.7075529" --sdk_root=${ANDROID_SDK_ROOT} &> /dev/null
+          echo "sdk.dir=${ANDROID_HOME}" > local.properties
+          # echo "ndk.dir=${ANDROID_HOME}/ndk/21.4.7075529" >> local.properties
+      - name: Native Build
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: ./run libs ssr
+      - name: Upload ShadowsocksR build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadowsocksr-libs
+          path: |
+            TMessagesProj/libs/ssr-libev-release.aar
+          compression-level: 9
+  package:
+    name: Package Libraries
+    runs-on: ubuntu-latest
+    needs:
+      - native
+      - v2ray
+      - shadowsocks
+      - shadowsocksr
+    steps:
+      - name: Download All Artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: libs-artifacts
+      - name: Prepare Directory Structure
+        run: |
+          mkdir -p libs-package/native/armeabi-v7a
+          mkdir -p libs-package/native/arm64-v8a
+          mkdir -p libs-package/aar
+          
+          # 复制Native库
+          cp -r libs-artifacts/native-libs-armeabi-v7a/* libs-package/native/armeabi-v7a/
+          cp -r libs-artifacts/native-libs-arm64-v8a/* libs-package/native/arm64-v8a/
+          
+          # 复制AAR库
+          cp libs-artifacts/v2ray-libs/libv2ray.aar libs-package/aar/
+          cp libs-artifacts/shadowsocks-libs/ss-rust-release.aar libs-package/aar/
+          cp libs-artifacts/shadowsocksr-libs/ssr-libev-release.aar libs-package/aar/
+      - name: Upload Libraries Package
+        uses: actions/upload-artifact@v4
+        with:
+          name: libraries-package
+          path: libs-package
+          compression-level: 9
