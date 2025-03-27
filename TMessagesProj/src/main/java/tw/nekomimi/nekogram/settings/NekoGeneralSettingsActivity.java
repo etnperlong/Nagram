@@ -418,14 +418,14 @@ private final AbstractConfigCell defaultHlsVideoQualityRow = cellGroup.appendCel
                     LocaleController.getInstance().recreateFormatters();
                 } else if (position == cellGroup.rows.indexOf(pushServiceTypeUnifiedDistributorRow)) {
                     PopupBuilder builder = new PopupBuilder(view);
-                    List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext, new ArrayList<>());
+                    List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext);
                     builder.setItems(distributors, (__, c) -> {
                         UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, c.toString());
-                        UnifiedPush.registerApp(
+                        UnifiedPush.register(
                                 ApplicationLoader.applicationContext,
                                 "default",
-                                new ArrayList<>(),
-                                "Telegram Simple Push"
+                                "Telegram WebPush",
+                                null
                         );
                         listAdapter.notifyItemChanged(position);
                         return Unit.INSTANCE;

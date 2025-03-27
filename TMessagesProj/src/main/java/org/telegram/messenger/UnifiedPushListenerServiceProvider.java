@@ -13,7 +13,7 @@ public class UnifiedPushListenerServiceProvider implements PushListenerControlle
 
     @Override
     public boolean hasServices() {
-        return !UnifiedPush.getDistributors(ApplicationLoader.applicationContext, new ArrayList<>()).isEmpty();
+        return !UnifiedPush.getDistributors(ApplicationLoader.applicationContext).isEmpty();
     }
 
     @Override
@@ -38,17 +38,17 @@ public class UnifiedPushListenerServiceProvider implements PushListenerControlle
                 SharedConfig.pushStringGetTimeStart = SystemClock.elapsedRealtime();
                 SharedConfig.saveConfig();
                 if (UnifiedPush.getAckDistributor(ApplicationLoader.applicationContext) == null) {
-                    List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext, new ArrayList<>());
+                    List<String> distributors = UnifiedPush.getDistributors(ApplicationLoader.applicationContext);
                     if (distributors.size() > 0) {
                         String distributor =  distributors.get(0);
                         UnifiedPush.saveDistributor(ApplicationLoader.applicationContext, distributor);
                     }
                 }
-                UnifiedPush.registerApp(
+                UnifiedPush.register(
                         ApplicationLoader.applicationContext,
                         "default",
-                        new ArrayList<>(),
-                        "Telegram Simple Push"
+                        "Telegram WebPush",
+                        null
                 );
             } catch (Throwable e) {
                 FileLog.e(e);
@@ -58,6 +58,6 @@ public class UnifiedPushListenerServiceProvider implements PushListenerControlle
 
     @Override
     public int getPushType() {
-        return PushListenerController.PUSH_TYPE_SIMPLE;
+        return PushListenerController.PUSH_TYPE_WEBPUSH;
     }
 }

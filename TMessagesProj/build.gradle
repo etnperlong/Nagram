@@ -373,7 +373,7 @@ dependencies {
     // add for emoji
     implementation 'com.jaredrummler:truetypeparser-light:1.0.0'
     // add for up
-    implementation 'org.unifiedpush.android:connector:2.5.0'
+    implementation 'org.unifiedpush.android:connector:3.0.7'
 }
 
 apply plugin: "com.google.gms.google-services"
