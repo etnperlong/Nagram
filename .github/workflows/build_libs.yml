@@ -4,12 +4,9 @@ on:
   workflow_dispatch:
     inputs:
       recompile:
-        description: 'Re-compile'
-        type: choice
-        options:
-          - 'No'
-          - 'Yes'
-        default: 'No'
+        description: 'Re-compile Native Libs?'
+        type: boolean
+        default: false
         required: true
 
 jobs:
@@ -38,7 +35,7 @@ jobs:
           git submodule status TMessagesProj/jni/dav1d > libdav1d_status
       - name: FFmpeg Cache
         id: cache
-        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        if: ${{ github.event.inputs.recompile != true }}
         uses: actions/cache@v4
         with:
           path: |
@@ -95,7 +92,7 @@ jobs:
           git submodule status TMessagesProj/jni/boringssl > boringssl_status
       - name: BoringSSL Cache
         id: cache
-        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        if: ${{ github.event.inputs.recompile != true }}
         uses: actions/cache@v4
         with:
           path: |
@@ -151,7 +148,7 @@ jobs:
           git submodule status TMessagesProj/jni/boringssl > boringssl_status
       - name: Native Cache
         id: cache
-        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        if: ${{ github.event.inputs.recompile != true }}
         uses: actions/cache@v4
         with:
           path: |
@@ -218,7 +215,7 @@ jobs:
           git submodule status v2ray > v2ray_status
       - name: V2ray Cache
         id: cache
-        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        if: ${{ github.event.inputs.recompile != true }}
         uses: actions/cache@v4
         with:
           path: |
@@ -275,7 +272,7 @@ jobs:
           git submodule status ss-rust/src/main/rust/shadowsocks-rust > shadowsocks_status
       - name: Shadowsocks Cache
         id: cache
-        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        if: ${{ github.event.inputs.recompile != true }}
         uses: actions/cache@v4
         with:
           path: |
@@ -322,7 +319,7 @@ jobs:
           git submodule status 'ssr-libev/*' > shadowsocksr_status
       - name: ShadowsocksR Cache
         id: cache
-        if: ${{ github.event.inputs.recompile != 'Yes' }}
+        if: ${{ github.event.inputs.recompile != true }}
         uses: actions/cache@v4
         with:
           path: |
