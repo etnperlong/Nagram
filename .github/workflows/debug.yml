@@ -410,18 +410,16 @@ jobs:
         with:
           name: boringssl-libs
           path: TMessagesProj/jni/boringssl/build
-      - name: Native Cache (armeabi-v7a)
-        uses: actions/cache@v4
+      - name: Download Native Artifacts (armeabi-v7a)
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            TMessagesProj/src/main/libs
-          key: ${{ hashFiles('TMessagesProj/jni/**', 'ffmpeg_status', 'boringssl_status') }}-armeabi-v7a
-      - name: Native Cache (arm64-v8a)
-        uses: actions/cache@v4
+          name: native-libs-armeabi-v7a
+          path: TMessagesProj/src/main/libs/armeabi-v7a
+      - name: Download Native Artifacts (arm64-v8a)
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            TMessagesProj/src/main/libs
-          key: ${{ hashFiles('TMessagesProj/jni/**', 'ffmpeg_status', 'boringssl_status') }}-arm64-v8a
+          name: native-libs-arm64-v8a
+          path: TMessagesProj/src/main/libs/arm64-v8a
       - name: V2ray Cache
         uses: actions/cache@v4
         with:
