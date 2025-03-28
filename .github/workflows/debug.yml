@@ -128,6 +128,13 @@ jobs:
         run: |
           ./run init action boringssl
           ./run init libs boringssl
+      - name: Upload BoringSSL build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: boringssl-libs
+          path: |
+            TMessagesProj/jni/boringssl/build
+          compression-level: 9
   native:
     name: Native Build (Telegram)
     runs-on: ubuntu-latest
@@ -202,6 +209,13 @@ jobs:
         run: |
           export NATIVE_TARGET="${{ matrix.flavor }}"
           ./run libs native
+      - name: Upload Native build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: native-libs-${{ matrix.flavor }}
+          path: |
+            TMessagesProj/src/main/libs/${{ matrix.flavor }}
+          compression-level: 9
   v2ray:
     name: Native Build (V2ray)
     runs-on: ubuntu-latest
@@ -252,6 +266,13 @@ jobs:
       - name: Native Build
         if: steps.cache.outputs.cache-hit != 'true'
         run: ./run libs v2ray
+      - name: Upload V2ray build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: v2ray-libs
+          path: |
+            TMessagesProj/libs/libv2ray.aar
+          compression-level: 9
   shadowsocks:
     name: Native Build (Shadowsocks)
     runs-on: ubuntu-latest
@@ -292,6 +313,13 @@ jobs:
       - name: Native Build
         if: steps.cache.outputs.cache-hit != 'true'
         run: ./run libs shadowsocks
+      - name: Upload Shadowsocks build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadowsocks-libs
+          path: |
+            TMessagesProj/libs/ss-rust-release.aar
+          compression-level: 9
   shadowsocksr:
     name: Native Build (ShadowsocksR)
     runs-on: ubuntu-latest
@@ -329,6 +357,13 @@ jobs:
       - name: Native Build
         if: steps.cache.outputs.cache-hit != 'true'
         run: ./run libs ssr
+      - name: Upload ShadowsocksR build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: shadowsocksr-libs
+          path: |
+            TMessagesProj/libs/ssr-libev-release.aar
+          compression-level: 9
   build:
     name: Gradle Build
     runs-on: ubuntu-latest
@@ -365,22 +400,16 @@ jobs:
           git submodule status ss-rust/src/main/rust/shadowsocks-rust > shadowsocks_status
           git submodule status 'ssr-libev/*' > shadowsocksr_status
           git submodule status v2ray > v2ray_status
-      - name: FFmpeg Cache
-        uses: actions/cache@v4
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: Download FFmpeg Artifacts
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            TMessagesProj/jni/ffmpeg/build
-            TMessagesProj/jni/libvpx/build
-            TMessagesProj/jni/dav1d/build
-          key: ${{ hashFiles('ffmpeg_status', 'libvpx_status', 'libdav1d_status', 'TMessagesProj/jni/*ffmpeg*.sh', 'TMessagesProj/jni/*libvpx*.sh', 'TMessagesProj/jni/*dav1d*.sh', 'TMessagesProj/jni/patches/ffmpeg/*') }}
-      - name: BoringSSL Cache
-        uses: actions/cache@v4
-        if: steps.cache.outputs.cache-hit != 'true'
+          name: ffmpeg-libs
+          path: TMessagesProj/jni
+      - name: Download BoringSSL Artifacts
+        uses: actions/download-artifact@v4
         with:
-          path: |
-            TMessagesProj/jni/boringssl/build
-          key: ${{ hashFiles('boringssl_status') }}
+          name: boringssl-libs
+          path: TMessagesProj/jni/boringssl/build
       - name: Native Cache (armeabi-v7a)
         uses: actions/cache@v4
         with:
